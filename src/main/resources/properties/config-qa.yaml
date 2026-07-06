@@ -1,6 +1,20 @@
 salesforce-sapi:
-  host: ""
-  port: ""
-  basePath: ""
-  protocol: ""
-  timeout: ""
+  host: ""            # TODO host do SAPI no QA (ex.: emccamp-salesforce-sapi-qa.<regiao>.cloudhub.io)
+  port: "443"
+  basePath: "/api"    # SAPI escuta em /api/* (documentos-comprador, content-versions)
+  protocol: "HTTPS"
+  timeout: "30000"
+
+idp:
+  # Endpoint do IDP Runtime — copie o host/basePath que o Studio pré-preenche
+  # na config gerada do connector (varia por região).
+  host: ""            # TODO ex.: idp-rt.us-east-1.anypoint.mulesoft.com
+  port: "443"
+  basePath: ""        # TODO caminho da document action (confirmar na config gerada)
+  protocol: "HTTPS"
+  timeout: "30000"
+  # Token OAuth do Connected App. US: anypoint.mulesoft.com | EU: eu1.anypoint.mulesoft.com
+  access-token-url: "https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token"
+  poll:
+    max-retries: "18"     # 18 x 10s = ~3 min de espera máxima
+    interval-ms: "10000"  # mínimo permitido pelo IDP

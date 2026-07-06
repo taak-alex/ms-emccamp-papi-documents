@@ -7,6 +7,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi/current/mule-emccamp-salesforce-sapi.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
 	<sub-flow name="idp-documents-orchestration-by-opportunityId" doc:id="e62a0f26-8cae-4214-a836-76c3180287e3" >
+		<set-variable value="#[[]]" doc:name="init idpResults" doc:id="8042fbbf-2138-430a-92f6-02f118b18a6e" variableName="idpResults"/>
 		<choice doc:name="Choice" doc:id="a4e0f713-aa32-47b6-80ab-9eef235c0c41" >
 			<when expression="#[!isEmpty(vars.opportunityId)]">
 				<emccamp-salesforce-sapi:listar-todos-os-documentos-da-oportunidade doc:name="Listar todos os documentos da oportunidade" doc:id="c22f3ad4-9cda-4108-b865-f2687afd46e9" config-ref="Emccamp_salesforce_sapi_Config" oportunidade-id="#[vars.opportunityId]" />
@@ -24,12 +25,27 @@ payload.records map (record) -> record.ContentDocument.LatestPublishedVersion.Id
 					<when expression="#[!isEmpty(vars.contentVersionsIdsCollection)]">
 						<foreach doc:name="Iterate Content Versions Collection" doc:id="fb67361e-83e4-4fa3-9113-276084bf4dc6" collection="#[vars.contentVersionsIdsCollection]">
 					<emccamp-salesforce-sapi:download-do-contedo-do-arquivo doc:name="Download do conteúdo do arquivo" doc:id="5d7fb227-a5e4-431d-aec7-039abb23d28a" config-ref="Emccamp_salesforce_sapi_Config" content-version-id="#[payload]" />
+							<set-variable value="#[payload]" doc:name="fileBinary" doc:id="61c50f62-c050-4714-a67b-4e066e090257" variableName="fileBinary"/>
+							<flow-ref doc:name="idp-process-document" doc:id="58662fd2-0244-43b1-8d58-ae2b1ea7209d" name="idp-process-document"/>
+							<set-variable value="#[(vars.idpResults default []) + payload]" doc:name="acumula resultado" doc:id="3bbc6f4b-0cae-4c84-b16c-48fc1f5937a7" variableName="idpResults"/>
 				</foreach>
 					</when>
 					<otherwise >
 						<logger level="INFO" doc:name="isEmpty OpportunityId Logger" doc:id="ad245528-bd48-4248-bfea-20bebcf0e7dc" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	message: "Sem content versions retornados"&#10;}]' />
 					</otherwise>
 				</choice>
+				<ee:transform doc:name="Transform Message" doc:id="d0160c15-ef9e-45f8-9901-c28f6bde03f9">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+  opportunityId: vars.opportunityId,
+  totalProcessados: sizeOf(vars.idpResults default []),
+  documentos: vars.idpResults default []
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
 			</when>
 			<otherwise >
 				<logger level="INFO" doc:name="isEmpty OpportunityId Logger" doc:id="47631df7-fec1-4800-b425-fd560fe3b727" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	message: "Id da oportunidade nulo ou vazio!"&#10;}]'/>
