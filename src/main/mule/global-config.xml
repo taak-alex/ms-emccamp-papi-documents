@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule
+	xmlns:idp-cnh-verification-action-100="http://www.mulesoft.org/schema/mule/idp-cnh-verification-action-100"
+	xmlns:emccamp-salesforce-sapi="http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi/current/mule-emccamp-salesforce-sapi.xsd
+http://www.mulesoft.org/schema/mule/idp-cnh-verification-action-100 http://www.mulesoft.org/schema/mule/idp-cnh-verification-action-100/current/mule-idp-cnh-verification-action-100.xsd">
+	<http:listener-config
+		name="emccamp-documents-papi-httpListenerConfig">
+		<http:listener-connection host="0.0.0.0"
+			port="8081" />
+	</http:listener-config>
+	<apikit:config name="emccamp-documents-papi-config"
+		api="resource::3166615c-54ca-4960-bcbc-db5a3ba1bb23:emccamp-documents-papi:1.0.0:raml:zip:emccamp-documents-papi.raml"
+		outboundHeadersMapName="outboundHeaders"
+		httpStatusVarName="httpStatus" />
+	<emccamp-salesforce-sapi:config name="Emccamp_salesforce_sapi_Config" doc:name="Emccamp-salesforce-sapi Config" doc:id="4b32f76c-c9b6-41ec-8610-bd21481788f7" property_host="${salesforce-sapi.host}" property_port="${salesforce-sapi.port}" property_basePath="${salesforce-sapi.basePath}" property_protocol="${salesforce-sapi.protocol}" property_responseTimeout="${salesforce-sapi.timeout}" />
+	<configuration-properties doc:name="Configuration properties" doc:id="70f9e19c-ad9a-482c-8594-a1d3dff8cba9" file="properties/config-${env}.yaml" />
+	<idp-cnh-verification-action-100:config name="IDP_Action_Config" doc:name="IDP - CNH Verification Action - 1.0.0 Config" doc:id="8a54b8ff-60aa-4386-9284-fe1053a362c1" property_host="${}" property_port="${}" property_basePath="${}" property_protocol="${}" property_responseTimeout="${}" property_client-id="${}" property_client-secret="${}" property_access-token-url="${}" />
+</mule>

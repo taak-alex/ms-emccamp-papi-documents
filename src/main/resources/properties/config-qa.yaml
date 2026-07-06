@@ -1,0 +1,6 @@
+salesforce-sapi:
+  host: ""
+  port: ""
+  basePath: ""
+  protocol: ""
+  timeout: ""

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:emccamp-salesforce-sapi="http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi/current/mule-emccamp-salesforce-sapi.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="idp-documents-orchestration-by-opportunityId" doc:id="e62a0f26-8cae-4214-a836-76c3180287e3" >
+		<choice doc:name="Choice" doc:id="a4e0f713-aa32-47b6-80ab-9eef235c0c41" >
+			<when expression="#[!isEmpty(vars.opportunityId)]">
+				<emccamp-salesforce-sapi:listar-todos-os-documentos-da-oportunidade doc:name="Listar todos os documentos da oportunidade" doc:id="c22f3ad4-9cda-4108-b865-f2687afd46e9" config-ref="Emccamp_salesforce_sapi_Config" oportunidade-id="#[vars.opportunityId]" />
+				<ee:transform doc:name="convert base64 on pdf" doc:id="ad42f4fb-5ed2-431b-939b-909eb1e239b4" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="contentVersionsIdsCollection" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.records map (record) -> record.ContentDocument.LatestPublishedVersion.Id]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<choice doc:name="Choice" doc:id="e51a4c3b-d077-48c4-8de4-eacf18eb33e2" >
+					<when expression="#[!isEmpty(vars.contentVersionsIdsCollection)]">
+						<foreach doc:name="Iterate Content Versions Collection" doc:id="fb67361e-83e4-4fa3-9113-276084bf4dc6" collection="#[vars.contentVersionsIdsCollection]">
+					<emccamp-salesforce-sapi:download-do-contedo-do-arquivo doc:name="Download do conteúdo do arquivo" doc:id="5d7fb227-a5e4-431d-aec7-039abb23d28a" config-ref="Emccamp_salesforce_sapi_Config" content-version-id="#[payload]" />
+				</foreach>
+					</when>
+					<otherwise >
+						<logger level="INFO" doc:name="isEmpty OpportunityId Logger" doc:id="ad245528-bd48-4248-bfea-20bebcf0e7dc" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	message: "Sem content versions retornados"&#10;}]' />
+					</otherwise>
+				</choice>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="isEmpty OpportunityId Logger" doc:id="47631df7-fec1-4800-b425-fd560fe3b727" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	message: "Id da oportunidade nulo ou vazio!"&#10;}]'/>
+			</otherwise>
+		</choice>
+	</sub-flow>
+</mule>
