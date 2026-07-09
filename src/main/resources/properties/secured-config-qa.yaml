@@ -1,5 +1,5 @@
 idp:
-  # Valores CRIPTOGRAFADOS com a Anypoint Secure Properties Tool (algoritmo Blowfish,
-  # mesma key do secure-properties:config). Substitua os placeholders abaixo.
-  client-id: "![COLOCAR_CLIENT_ID_CRIPTOGRAFADO]"
-  client-secret: "![COLOCAR_CLIENT_SECRET_CRIPTOGRAFADO]"
+  # Valores CRIPTOGRAFADOS com Blowfish/CBC/PKCS5Padding (mesma key do secure-properties:config,
+  # passada em runtime via -Dsecure.key). Seguro para commitar: sem a key nao servem para nada.
+  client-id: "![vtfv+Kr+Yisj1PBnlV4TwAwzKA2GbXCBtgizGHUfJTrhvb6qEE1VMA==]"
+  client-secret: "![7BAwIq0vAJ+D9z6QhMX85JDOFGPdvlw3RjMo7J2gSrMyNpCha9wlJg==]"

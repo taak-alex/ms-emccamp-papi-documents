@@ -47,6 +47,12 @@
 			<classifier>mule-plugin</classifier>
 		</dependency>
 		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-file-connector</artifactId>
+			<version>1.5.5</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		<dependency>
 			<groupId>3166615c-54ca-4960-bcbc-db5a3ba1bb23</groupId>
 			<artifactId>emccamp-documents-papi</artifactId>
 			<version>1.0.0</version>

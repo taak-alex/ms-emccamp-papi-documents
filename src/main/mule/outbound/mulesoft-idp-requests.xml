@@ -6,9 +6,27 @@
 http://www.mulesoft.org/schema/mule/idp-cnh-verification-action-100 http://www.mulesoft.org/schema/mule/idp-cnh-verification-action-100/current/mule-idp-cnh-verification-action-100.xsd">
 	<sub-flow name="idp-submit-document" doc:id="827e94f7-8e10-4af7-8bed-4e627afb795b" >
 		<idp-cnh-verification-action-100:postdocumentactionexecution doc:name="postDocumentActionExecution" doc:id="45f6de91-885a-44e6-a718-8bf8a82f3e76" config-ref="IDP_Action_Config">
-			<idp-cnh-verification-action-100:postdocumentactionexecution-request-data ><![CDATA[#[vars.fileBinary]]]></idp-cnh-verification-action-100:postdocumentactionexecution-request-data>
+			<idp-cnh-verification-action-100:postdocumentactionexecution-request-data ><![CDATA[#[%dw 2.0
+output application/java
+var mime = (vars.fileBinary.^mimeType) default "application/pdf"
+var ext = ((mime splitBy "/")[-1]) default "pdf"
+---
+{
+	parts: {
+		file: {
+			headers: {
+				"Content-Disposition": {
+					name: "file",
+					filename: "documento." ++ ext
+				},
+				"Content-Type": mime
+			},
+			content: vars.fileBinary
+		}
+	}
+}]]]></idp-cnh-verification-action-100:postdocumentactionexecution-request-data>
 		</idp-cnh-verification-action-100:postdocumentactionexecution>
-		<set-variable value="#[payload.executionId]" doc:name="executionId" doc:id="d7fd9242-3b68-492c-9b58-fab970293141" variableName="executionId"/>
+		<set-variable value="#[payload.id]" doc:name="executionId" doc:id="d7fd9242-3b68-492c-9b58-fab970293141" variableName="executionId"/>
 	</sub-flow>
 	<sub-flow name="idp-get-result" doc:id="db06adb3-7712-4418-a959-99059cbeb03c" >
 		<idp-cnh-verification-action-100:getdocumentactionexecution doc:name="getDocumentActionExecution" doc:id="85b1201f-e95f-4582-bb88-7f99f0e138da" config-ref="IDP_Action_Config" execution-id="#[vars.executionId]"/>
@@ -18,7 +36,7 @@ http://www.mulesoft.org/schema/mule/idp-cnh-verification-action-100 http://www.m
 		<until-successful maxRetries="${idp.poll.max-retries}" doc:name="Until Successful" doc:id="3f66a852-a573-4b30-b234-1301031a755f" millisBetweenRetries="${idp.poll.interval-ms}">
 			<flow-ref doc:name="idp-get-result" doc:id="172f07c1-999e-4e4f-a0f5-625d15657d17" name="idp-get-result"/>
 			<choice doc:name="Choice" doc:id="973e31da-9d86-4f4f-be5a-9ab64ecc7d0a" >
-				<when expression="#[not (payload.status in ['SUCCEEDED','FAILED'])]">
+				<when expression="#[not (['SUCCEEDED','FAILED','MANUAL_VALIDATION_REQUIRED'] contains payload.status)]">
 					<raise-error doc:name="Raise error" doc:id="def9873c-9fa6-4ac2-9745-a6bf8f57bae0" type="APP:IDP_IN_PROGRESS" description="IDP ainda processando"/>
 				</when>
 			</choice>

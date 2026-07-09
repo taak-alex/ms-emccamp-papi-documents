@@ -2,10 +2,12 @@
 
 <mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:emccamp-salesforce-sapi="http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi"
 	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
 	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi/current/mule-emccamp-salesforce-sapi.xsd
-http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
 	<sub-flow name="idp-documents-orchestration-by-opportunityId" doc:id="e62a0f26-8cae-4214-a836-76c3180287e3" >
 		<set-variable value="#[[]]" doc:name="init idpResults" doc:id="8042fbbf-2138-430a-92f6-02f118b18a6e" variableName="idpResults"/>
 		<choice doc:name="Choice" doc:id="a4e0f713-aa32-47b6-80ab-9eef235c0c41" >
@@ -27,17 +29,40 @@ payload.records map (record) -> record.ContentDocument.LatestPublishedVersion.Id
 					<emccamp-salesforce-sapi:download-do-contedo-do-arquivo doc:name="Download do conteúdo do arquivo" doc:id="5d7fb227-a5e4-431d-aec7-039abb23d28a" config-ref="Emccamp_salesforce_sapi_Config" content-version-id="#[payload]" />
 							<set-variable value="#[payload]" doc:name="fileBinary" doc:id="61c50f62-c050-4714-a67b-4e066e090257" variableName="fileBinary"/>
 							<flow-ref doc:name="idp-process-document" doc:id="58662fd2-0244-43b1-8d58-ae2b1ea7209d" name="idp-process-document"/>
-							<set-variable value="#[(vars.idpResults default []) + payload]" doc:name="acumula resultado" doc:id="3bbc6f4b-0cae-4c84-b16c-48fc1f5937a7" variableName="idpResults"/>
+							<set-variable value="#[%dw 2.0&#10;output application/java&#10;---&#10;(vars.idpResults default []) + payload]" doc:name="acumula resultado" doc:id="3bbc6f4b-0cae-4c84-b16c-48fc1f5937a7" variableName="idpResults"/>
 				</foreach>
 					</when>
 					<otherwise >
 						<logger level="INFO" doc:name="isEmpty OpportunityId Logger" doc:id="ad245528-bd48-4248-bfea-20bebcf0e7dc" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	message: "Sem content versions retornados"&#10;}]' />
 					</otherwise>
 				</choice>
+				<file:write doc:name="Grava CSV" doc:id="a1b2c3d4-e5f6-7890-abcd-000000000010" config-ref="File_Config" path="#['${files.output-dir}/cnh-' ++ (vars.opportunityId default 'sem-id') ++ '-' ++ (now() as String {format: 'yyyyMMdd-HHmmss'}) ++ '.csv']">
+					<file:content><![CDATA[#[%dw 2.0
+output application/csv separator=";"
+fun promptsDe(exec) = (exec.pages default []) map ($.prompts default {}) reduce ((it, acc = {}) -> acc ++ it)
+fun campo(exec, chave) = (promptsDe(exec)[chave].answer.value) default ""
+---
+(vars.idpResults default []) map (exec) -> {
+	opportunityId: vars.opportunityId default "",
+	executionId: exec.id default "",
+	documento: exec.documentName default "",
+	status: exec.status default "",
+	nome: campo(exec, "cnh_name"),
+	cpf: campo(exec, "cnh_cpf"),
+	numeroRegistro: campo(exec, "cnh_number"),
+	categoria: campo(exec, "cnh_category"),
+	docIdentidade: campo(exec, "cnh_docIdentidade"),
+	dataNascimento: campo(exec, "cnh_birthDate"),
+	localNascimento: campo(exec, "cnh_birthPlace"),
+	primeiraHabilitacao: campo(exec, "cnh_firstLicense"),
+	dataEmissao: campo(exec, "cnh_issueDate"),
+	validade: campo(exec, "cnh_expiryDate")
+}]]]></file:content>
+				</file:write>
 				<ee:transform doc:name="Transform Message" doc:id="d0160c15-ef9e-45f8-9901-c28f6bde03f9">
 							<ee:message>
 								<ee:set-payload><![CDATA[%dw 2.0
-output application/java
+output application/json
 ---
 {
   opportunityId: vars.opportunityId,

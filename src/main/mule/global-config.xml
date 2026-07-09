@@ -5,12 +5,16 @@
 	xmlns:emccamp-salesforce-sapi="http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi"
 	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
 	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
 	xmlns="http://www.mulesoft.org/schema/mule/core"
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi http://www.mulesoft.org/schema/mule/emccamp-salesforce-sapi/current/mule-emccamp-salesforce-sapi.xsd
-http://www.mulesoft.org/schema/mule/idp-cnh-verification-action-100 http://www.mulesoft.org/schema/mule/idp-cnh-verification-action-100/current/mule-idp-cnh-verification-action-100.xsd">
+http://www.mulesoft.org/schema/mule/idp-cnh-verification-action-100 http://www.mulesoft.org/schema/mule/idp-cnh-verification-action-100/current/mule-idp-cnh-verification-action-100.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
 	<http:listener-config
 		name="emccamp-documents-papi-httpListenerConfig">
 		<http:listener-connection host="0.0.0.0"
@@ -22,5 +26,11 @@ http://www.mulesoft.org/schema/mule/idp-cnh-verification-action-100 http://www.m
 		httpStatusVarName="httpStatus" />
 	<emccamp-salesforce-sapi:config name="Emccamp_salesforce_sapi_Config" doc:name="Emccamp-salesforce-sapi Config" doc:id="4b32f76c-c9b6-41ec-8610-bd21481788f7" property_host="${salesforce-sapi.host}" property_port="${salesforce-sapi.port}" property_basePath="${salesforce-sapi.basePath}" property_protocol="${salesforce-sapi.protocol}" property_responseTimeout="${salesforce-sapi.timeout}" />
 	<configuration-properties doc:name="Configuration properties" doc:id="70f9e19c-ad9a-482c-8594-a1d3dff8cba9" file="properties/config-${env}.yaml" />
-	<idp-cnh-verification-action-100:config name="IDP_Action_Config" doc:name="IDP - CNH Verification Action - 1.0.0 Config" doc:id="8a54b8ff-60aa-4386-9284-fe1053a362c1" property_host="${}" property_port="${}" property_basePath="${}" property_protocol="${}" property_responseTimeout="${}" property_client-id="${}" property_client-secret="${}" property_access-token-url="${}" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="b1a2c3d4-0000-0000-0000-000000000001" file="properties/secured-config-${env}.yaml" key="${secure.key}">
+		<secure-properties:encrypt algorithm="Blowfish" mode="CBC" />
+	</secure-properties:config>
+	<idp-cnh-verification-action-100:config name="IDP_Action_Config" doc:name="IDP - CNH Verification Action - 1.0.0 Config" doc:id="8a54b8ff-60aa-4386-9284-fe1053a362c1" property_host="${idp.host}" property_port="${idp.port}" property_basePath="${idp.basePath}" property_protocol="${idp.protocol}" property_responseTimeout="${idp.timeout}" property_client-id="${secure::idp.client-id}" property_client-secret="${secure::idp.client-secret}" property_access-token-url="${idp.access-token-url}" />
+	<file:config name="File_Config" doc:name="File Config" doc:id="a1b2c3d4-e5f6-7890-abcd-000000000011">
+		<file:connection />
+	</file:config>
 </mule>
